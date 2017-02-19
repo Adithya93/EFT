@@ -1,0 +1,58 @@
++ Table Implementation Alternatives
+	+ Content-Addressable Memory (CAM) vs Hash Table
+	+ CAM
+		+ Use any 5 bits to index into memory
+		+ 48-bit comparator for each entry with input address as one of its compare inputs
+		+ If each entry contains a single address and not a list, then similar to a singly-associative cache 
+		+ Try to retrieve further information From Pong Chu Book
+	+ Hash Table
+		+ Hash down 48-bit frame into 5 bit output
+			+ Hashing Function : Modulo => Read a specific bit-substring, such as bottom 5 bits
+			+ But this sounds the same as above...?
+			+ How to resolve hashing collisions?
+				+ Modified LRU Algorithm?	
+
++ Size of 2^N => If 32, N = 5
+	+ Have an array for each entry? E.g. Each of the 32 entries corresponds to a bit sequence for bits [4:0], and for each such entry, there can be a FIFO buffer of n frames, whose current size is tracked by the Eviction System
+		+ If only 1 item per entry, then Eviction policy is NOT LRU => simply replace frame at index if frame address not equal to lookup address
+
++ Functional Subsystems
+	
+	+ Lookup System Design
+		+ CAM - Index into table using substring of address bits (E.g. bottom N bits)
+		+ Ports
+			+ Input
+				+ wEn
+				+ rEn?
+				+ getAddr [47:0]
+				+ putAddr [47:0]
+				+ putXMTPort [PORT_SIZE:0]
+			+ Output
+				+ isHit
+				+ getXMTPort [PORT_SIZE:0]
+
+	+ Eviction System Design
+		+ IF array per entry
+			+ LRU (FIFO Queue/Buffer)
+				+ Ports
+					+ Input
+						+ moveToBack
+						+ addToQueue [N-1:0]
+					+ Output
+						+ isFull
+						+ evictIndex [N-1:0]
+		+ ELSE (if singly-associative)
+			+ This system is not needed
+
+	+ Aging System Design
+		+ Check age just-in-time on cache hit vs Periodic polling 
+		+ Counting up to 5 minutes with a 50 MHz clock requires a 38 bit counter for every table index
+			+ Storage overhead of 38N bits, where N is number of table indices
+		+ Ports
+			+ Input
+				+ Index [N-1:0]
+				+ replaceIndex 
+			+ Output
+				+ isExpired
+
+	+ Flooding System? Out of scope of table?

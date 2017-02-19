@@ -1,0 +1,41 @@
+For each RCV port FWD has
+	+ data buffer input (8 bits)
+	+ data buffer write-enable
+	+ length buffer input (11 bits, to accommodate max length of 15xx)
+	+ length buffer write-enable
+
+
+
+One data output, one length output for set of XMT ports
+
+
+Key FWD Functions
+	+ "Fair" service policy for per-RCV port buffers
+		+ Avoid starvation of any RCV port, such as through policy of always taking only complete frames (this would starve ports with smaller buffers)
+	+ Extract DA, SA and pass to table
+	+ "Wait" for table response
+	+ Pass to XMT
+
+Key Table Functions (32 entry table)
+	+ How does interface with RCV port work?
+	+ Interface to FWD
+	1) Lookup DA & return result to FWD
+	2) Lookup SA & update table entries if necessary
+		+ If SA not in table
+			+ If table not full
+				+ Just enter SA & port into table
+			+ Else
+				+ Evict an existing SA, and enter SA & port in its place
+		+ Else
+			+ If current port is different, overwrite it
+	3) Age out old addresses (Such as more than 5 minutes old)
+
+	Try to perform 1) (higher priority), don't let other functions interfere with this
+	2) can be slower (lower priority) than 1)
+
+
+
++ For Thursday
+	+ How functions will be split between Table and RCV port, what interface might look like
+	+ Preliminary idea of how work will be split among team members (in terms of sub-systems/interfacs within table)
+	+ Put any concerns/questions on a slide
