@@ -1,0 +1,40 @@
+The switch is partitioned into four subsystems:
+    1. receive port
+    2. transmit port
+    3. forwarding ("switch fabric")
+    4. table
+
+Receive port functions include:
+    checking that received frames are valid
+    discard of invalid frames
+    interfaces to the forwarding subsystem
+    buffering of frames
+    receive interface to PHY
+	clock domain boundary
+
+Transmit port functions include:
+    prepend preamble and SFD to frames being transmitted
+    maintaining interframe gap for transmitted frames
+    interfaces to the forwarding subsystem
+    buffering of frames, including queue management given an output-queueing
+		architecture for the switch
+    transmit interface to PHY
+	clock domain boundary
+
+Forwarding functions include:
+    making forwarding decisions based on MAC addresses in frames,
+        using info from the table subsystem
+    receive port to transmit port data paths, i.e moving each frame from a
+		receive port to the appropriate transmit port(s)
+    interfaces to the table subsystem
+    interfaces to the ports
+
+Table functions include:
+    managing the forwarding table
+	performing lookups into the table for forwarding decisions and the learning
+		process
+    adding and deleting table entries ("learning" process)
+    interfaces to the forwarding subsystem
+
+
+
