@@ -1,9 +1,0 @@
-+ Hashing
-	+ 16 to 5 CRC
-	+ Takes 3 - 4 cycles
-	+ Bucket Size at least 2
-		+ Beauty of 2 : NMRU == LRU !
-			+ Easy implementation of LRU : Just write 0 1 or 1 0 into respective LRU bits of the 2 key-value mappings of that bucket
-
-+ CAM
-	+ May not need LRU per se, but can be NMRU or a simpler variant
