@@ -8,6 +8,7 @@ entity lookUpTable is
 		srcAddr_sig, destAddrIn_sig:			in std_logic_vector(47 downto 0);
 		srcPort_sig:								in std_logic_vector(9 downto 0);
 		clk_sig, lookNowIn_sig:					in std_logic;
+		reset_sig:									in std_logic;
 		destAddrOut_sig:							out std_logic_vector(47 downto 0);
 		destPort_sig: 								out std_logic_vector(9 downto 0);
 		isHit_sig, lookNowOut_sig:				out std_logic);
@@ -17,13 +18,15 @@ architecture mult_subsystem of lookUpTable is
 	component hashTable 
 		port(
 			compareDone, ageOut, clk, hashNow:	 in std_logic;
+			reset:										 in std_logic;
 			srcAdd, destAddIn:						 in std_logic_vector(47 downto 0);
 			identf:										 in std_logic_vector(1 downto 0);
 			srcPort:										 in std_logic_vector(9 downto 0);
 			notValid: 									 in std_logic_vector(5 downto 0);
 			destPort:									out std_logic_vector(9 downto 0);
 			destAddOut, cAddrOne, cAddrTwo:		out std_logic_vector(47 downto 0);
-			resetAgeing, isHit:						out std_logic);
+			setRegAge:									out std_logic_vector(5 downto 0);
+			compareLook, resetAgeing, isHit:						out std_logic);
 	end component;
 
 	component comparator
@@ -34,22 +37,29 @@ architecture mult_subsystem of lookUpTable is
 			compDone:	out std_logic);
 		end component;
 		
---	component ageing
---		port(
---		
---		);
---		end component;
+
+	component agingModule is
+		port (
+			clk, global_reset: in std_logic;
+			look_now: in std_logic;
+			set_reg_age: in std_logic_vector(5 downto 0);
+			age_out_now: out std_logic;
+			age_out_reg: out std_logic_vector(5 downto 0));
+		end component;
 		
 		signal compDone_sig, resetAgeing_sig, ageOut_sig: 		std_logic;
 		signal addr1_sig, addr2_sig: 									std_logic_vector(47 downto 0);
 		signal identf_sig:												std_logic_vector(1 downto 0);
 		signal notValid_sig: 											std_logic_vector(5 downto 0);
+		signal setRegAge_sig:											std_logic_vector(5 downto 0);
+		signal compareLook_sig:											std_logic;
 		
 		begin
 		U0: hashTable port map(compareDone => compDone_sig,
 										ageOut => ageOut_sig,
 										clk => clk_sig,
 										hashNow => lookNowIn_sig,
+										reset => reset_sig,
 										srcAdd => srcAddr_sig,
 										destAddIn => destAddrIn_sig,
 										identf => identf_sig,
@@ -59,6 +69,8 @@ architecture mult_subsystem of lookUpTable is
 										destAddOut => destAddrOut_sig,
 										cAddrOne => addr1_sig,
 										cAddrTwo => addr2_sig,
+										setRegAge => setRegAge_sig,
+										compareLook => compareLook_sig,
 										resetAgeing => resetAgeing_sig,
 										isHit => isHit_sig);
 										
@@ -67,5 +79,10 @@ architecture mult_subsystem of lookUpTable is
 										compResult => identf_sig,
 										compDone => compDone_sig);
 										
---		U2: ageing port map( );
+		U2: agingModule port map(clk => clk_sig,
+										 global_reset => reset_sig,
+										 look_now => resetAgeing_sig,
+										 set_reg_age => setRegAge_sig,
+										 age_out_now => ageOut_sig,
+										 age_out_reg => notValid_sig);
 	end mult_subsystem;
