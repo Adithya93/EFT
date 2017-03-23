@@ -14,10 +14,17 @@ entity hashTable is
 			notValid: 									 in std_logic_vector(5 downto 0);
 			destPort:									out std_logic_vector(9 downto 0);
 			--destAddOut, cAddrOne, cAddrTwo:		out std_logic_vector(47 downto 0);
-			cAddrOne, cAddrTwo:		out std_logic_vector(47 downto 0);
+			cAddrOne, cAddrTwo:		buffer std_logic_vector(47 downto 0);
 			setRegAge:									out std_logic_vector(5 downto 0);
-			compareLook, resetAgeing, isHit:		out std_logic);
-end hashTable;
+			compareLook, resetAgeing, isHit:		out std_logic;
+			hashVal:								buffer std_logic_vector(4 downto 0);
+			crc_reset:							buffer std_logic;
+			isDone:										out std_logic);
+--			bucket_entry1_out, bucket_entry2_out : buffer std_logic_vector(47 downto 0);--);-- for debugging);
+--			bucket_ports1_out, bucket_ports2_out : buffer std_logic_vector(9 downto 0);--);
+--			valid_regfile_out							 : buffer std_logic_vector(63 downto 0));
+			
+	end hashTable;
 		
 architecture hashing of hashTable is 
 	component tableEntries
@@ -66,14 +73,11 @@ architecture hashing of hashTable is
 	type state_type is
 		(A, B, C, D, E, F, G, H);
 	signal state_reg, state_next: state_type;
-	--signal crc_out1, crc_out2: std_logic_vector(4 downto 0);
 	signal crc_in : std_logic_vector(15 downto 0);
 	signal crc_out : std_logic_vector(4 downto 0);
-	signal hashVal : std_logic_vector(4 downto 0);
 	
 	signal bucket_entry1_in, bucket_entry2_in: std_logic_vector(47 downto 0);
 	signal bucket_entry1_out, bucket_entry2_out: std_logic_vector(47 downto 0);
-	--signal table_we1, table_we2, crc_enaSA, crc_enaDA : std_logic;
 	signal table_we1, table_we2, crc_ena : std_logic;
 	
 	-- For storing port info 
@@ -95,21 +99,12 @@ architecture hashing of hashTable is
 
 	begin
 		
-		--CRC1: crc port map(data_in => destAddIn(47 downto 32),
 		CRC1: crc port map(data_in => crc_in,
---								crc_en => crc_enaDA,
 								crc_en => crc_ena,
-								rst => reset,
+								rst => crc_reset,
 								clk => clk,
---								crc_out => crc_out1);
 								crc_out => crc_out);
-								
-		--CRC2: crc port map(data_in => srcAdd(47 downto 32),
-		--						crc_en => crc_enaSA,
-		--						rst => reset,
-		--						clk => clk,
-		--						crc_out => crc_out2);
-		
+										
 		regEntry1: tableEntries port map(DATA_IN => bucket_entry1_in,
 													reg_select => hashVal, 
 													clk_sig2 => clk,
@@ -128,7 +123,6 @@ architecture hashing of hashTable is
 												  reg_select => hashVal,
 												  clk_sig2 => clk,
 												  clrn_sig2 => reset,
-												  --ena_sig2 => table_we1,
 												  ena_sig2 => ports_we1,
 												  prn_sig2 => '0',
 												  regDataOut => bucket_ports1_out);
@@ -137,7 +131,6 @@ architecture hashing of hashTable is
 												  reg_select => hashVal,
 												  clk_sig2 => clk,
 												  clrn_sig2 => reset,
-												  --ena_sig2 => table_we2,
 												  ena_sig2 => ports_we2,
 												  prn_sig2 => '0',
 												  regDataOut => bucket_ports2_out);
@@ -163,7 +156,7 @@ architecture hashing of hashTable is
 		process(clk, reset)
 		begin
 			if(reset = '1') then state_reg <= A;
-			elsif (clk'event and clk = '1') then 
+			elsif (clk'event and clk = '0') then 
 				state_reg <= state_next;
 			end if;
 		end process;
@@ -203,16 +196,36 @@ architecture hashing of hashTable is
 				end case;
 			end process;					
 	
-		process(state_reg, ageOut, identf, crc_out, bucket_entry1_out, bucket_entry2_out, srcAdd, notValid, valid_regfile_out, hashVal, lru_in, lru_out, valid_we, valid_regfile_in, valid_regfile_reg, bucket_ports1_out, bucket_ports2_out, srcPort)
+		process(state_reg, ageOut, identf, crc_out, bucket_entry1_out, bucket_entry2_out, srcAdd, notValid, valid_regfile_out, hashVal, lru_in, lru_out, valid_we, valid_regfile_in, valid_regfile_reg, bucket_ports1_out, bucket_ports2_out, srcPort, destAddIn, crc_reset)
 		begin 
-			-- set default values to prevent inferred latch?
-			--lru_enable <= '0';
-			--lru_in <= '0'; -- doesn't really matter in light of the above line, but just in case
-			-- should do the same for other signals being assigned below?
-			--valid_we <= '0';
-			--valid_regfile_in <= '0';
+		table_we1 <= '0';
+		table_we2 <= '0';
+		bucket_ports2_in <= "0000000000";
+		bucket_ports1_in <= "0000000000";
+		bucket_entry1_in <= "000000000000000000000000000000000000000000000000";
+		bucket_entry2_in <= "000000000000000000000000000000000000000000000000";
+		ports_we2 <= '0';
+		ports_we1 <= '0';
+		setRegAge <= "000000";
+		lru_in <= '0';
+		lru_enable <= '0';
+		destPort <= "0000000000";
+		cAddrOne <= "111111110000000000000000000000000000000000000000";
+		cAddrTwo <= "111111111111100000000000000000000000000000000000";
+		isHit <= '0';
+		isDone <= '0';
+		resetAgeing <= '0';
+		compareLook <= '0';
+		crc_ena <= '0';
+		crc_in <= "0000000000000000";
+		valid_regfile_reg <= "000000";
+		valid_regfile_in <= '0';
+		valid_we <= '0';
+		crc_reset <= '0';
+		
 			case state_reg is
 			when A =>
+			crc_reset <= '1';
 				if(ageOut = '1') then -- sufficient to check only at one stage of the FSM since ageOut spans many rounds
 					-- set valid bit to invalid
 					valid_we <= '1';
@@ -221,100 +234,71 @@ architecture hashing of hashTable is
 				end if;
 			when B =>
 
---				crc_enaDA <= '1';
---				crc_enaSA <= '0';
+				crc_reset <= '0';
 				crc_ena <= '1';
-				
 				crc_in <= destAddIn(47 downto 32);
-				
 				compareLook <= '0';
 				isHit <= '0';
 				valid_we <= '0';
 			when C =>
 				--send to comparator and wait;
---				hashVal <= crc_out1;
-				hashVal <= crc_out; -- need to use blocking assignment?
+				hashVal <= crc_out; 
 				cAddrOne <= bucket_entry1_out;
 				cAddrTwo <= bucket_entry2_out;
---				crc_enaDA <= '0';
---				crc_enaSA <= '0';
 				crc_ena <= '0';
 				compareLook <= '1';
 				isHit <= '0';
 			when D =>
 				--send destination result + update LRU
---				crc_enaDA <= '0';
---				crc_enaSA <= '0';
+				crc_reset <= '1';
 				crc_ena <= '0';
-				compareLook <= '0';
---				if(identf = "01" or identf = "10") then
---					isHit <= '1'; --TBD
-					-- Update LRU to be 
---				else
---					isHit <= '0';
---				end if;
+				compareLook <= '0';				
+				isDone <= '1';
 				-- update LRU for read if hit, same with resetting of ageing
-				if(identf = "01" and valid_regfile_out(to_integer(unsigned(hashVal & '1'))) = '1') then
+				if(identf = "01" and valid_regfile_out(63 - to_integer(unsigned(hashVal & '1'))) = '1') then
 					isHit <= '1';
-					
 					-- set destPort to be port saved in table
-					destPort <= bucket_ports2_out;
-					
+					destPort <= bucket_ports2_out;					
 					lru_enable <= '1';
 					lru_in <= '1';
-					
 					resetAgeing <= '1'; -- tell ageing subsystem to write-enable
 					setRegAge <= hashVal & lru_in;
-					
 					valid_we <= '1';
 					valid_regfile_in <= '1'; -- just used value, will be valid
-					valid_regfile_reg <= hashVal & lru_in;
+					valid_regfile_reg <= hashVal & lru_in;					
 					
-					
-				elsif(identf = "10" and valid_regfile_out(to_integer(unsigned(hashVal & '0'))) = '1') then
-					isHit <= '1';
-					
+				elsif(identf = "10" and valid_regfile_out(63 - to_integer(unsigned(hashVal & '0'))) = '1') then
+					isHit <= '1';					
 					-- set destPort to be port saved in table
-					destPort <= bucket_ports1_out;
-					
+					destPort <= bucket_ports1_out;					
 					lru_enable <= '1';
 					lru_in <= '0';
-					
 					resetAgeing <= '1'; -- tell ageing subsystem to write-enable
 					setRegAge <= hashVal & lru_in;
-					
 					valid_we <= '1';
 					valid_regfile_in <= '1'; -- just used value, will be valid
-					valid_regfile_reg <= hashVal & lru_in;
-					
+					valid_regfile_reg <= hashVal & lru_in;	
 				else -- miss
 					lru_enable <= '0';
 					isHit <= '0';
 				end if;
 					
 			when E => 
-				--hashval from srcAdd
---				crc_enaDA <= '0';
---				crc_enaSA <= '1';
+				-- hashVal from srcAdd
 				crc_ena <= '1';
-				
+				crc_reset <= '0';				
 				crc_in <= srcAdd(47 downto 32);
-				
 				compareLook <= '0';
 				isHit <= '0';
-				
 				lru_enable <= '0';
 				resetAgeing <= '0';
 				valid_we <= '0';
 				
 			when F =>
 				--send to comparator and wait;
---				hashVal <= crc_out2;
 				hashVal <= crc_out;
 				cAddrOne <= bucket_entry1_out;
 				cAddrTwo <= bucket_entry2_out;
---				crc_enaDA <= '0';
---				crc_enaSA <= '0';
 				crc_ena <= '0';
 				compareLook <= '1';
 								
@@ -328,20 +312,15 @@ architecture hashing of hashTable is
 				
 				--store source address (if need be)				
 				if(identf = "00") then		
---					isHit <= '0'; -- Hit doesn't apply to Source Address right?
 					-- need to write the SA into whichever is the LRU
---					bucket_entry1_in <= srcAdd;		
---					table_we1 <= '1';		
 					if(lru_out = '0') then -- lru is bucket_entry1
 						bucket_entry1_in <= srcAdd;
 						table_we1 <= '1';
-						table_we2 <= '0';
-						
+						table_we2 <= '0';						
 						-- store srcPort in table
 						ports_we1 <= '1';
 						ports_we2 <= '0';
 						bucket_ports1_in <= srcPort;
-						
 						lru_in <= '1'; -- lru will be bucket_entry2 on next cycle
 						setRegAge <= hashVal & lru_out; -- reset age of bucket_entry1 as it is being written to
 						valid_regfile_in <= '1';
@@ -349,13 +328,11 @@ architecture hashing of hashTable is
 					else -- lru is bucket_entry2
 						bucket_entry2_in <= srcAdd;
 						table_we1 <= '0';
-						table_we2 <= '1';
-						
+						table_we2 <= '1';						
 						-- store srcPort in table
 						ports_we1 <= '0';
 						ports_we2 <= '1';
 						bucket_ports2_in <= srcPort;
-						
 						lru_in <= '0'; -- lru will be bucket_entry1 on next cycle
 						setRegAge <= hashVal & lru_out; -- reset age of bucket_entry2 as it is being written to
 						valid_regfile_in <= '1';
@@ -364,35 +341,28 @@ architecture hashing of hashTable is
 				elsif(identf = "01") then -- just update lru & ageing, but dont need to write into entry		
 					table_we1 <= '0';
 					table_we2 <= '0';
-					
 					-- overwrite port for given address
 					ports_we1 <= '0';
 					ports_we2 <= '1';
-					bucket_ports2_in <= srcPort;
-					
+					bucket_ports2_in <= srcPort;				
 					lru_in <= '1'; -- lru will be bucket_entry2 on next cycle
 					setRegAge <= hashVal & lru_in; -- reset age of bucket_entry2 as it was just used
 					valid_regfile_in <= '1';
 					valid_regfile_reg <= hashVal & lru_in;
 				else -- must be "10"
 					table_we1 <= '0';
-					table_we2 <= '0';
-					
+					table_we2 <= '0';			
 					-- overwrite port for given address
 					ports_we1 <= '1';
 					ports_we2 <= '0';
-					bucket_ports1_in <= srcPort;
-					
+					bucket_ports1_in <= srcPort;			
 					lru_in <= '0'; -- lru will be bucket_entry1 on next cycle
 					setRegAge <= hashVal & lru_in; -- reset age of bucket_entry1 as it was just used
 					valid_regfile_in <= '1';
 					valid_regfile_reg <= hashVal & lru_in;
 				end if;
---				crc_enaDA <= '0';
---				crc_enaSA <= '0';
 				crc_ena <= '0';
 				compareLook <= '0';
---				isHit <= '0';
 			when H =>
 				lru_enable <= '0';
 				resetAgeing <= '0';
@@ -401,12 +371,6 @@ architecture hashing of hashTable is
 				table_we2 <= '0';
 				ports_we1 <= '0';
 				ports_we2 <= '0';
---				valid_we <= '1';
---				valid_regfile_in <= '1';
-				--valid_regfile_reg <= TBD
---				table_we1 <= '0';
---				setRegAge <= "000000"; --Set Reg Age for entry that was either newly written or read from cache
---				resetAgeing <= '1'; --TBD
 			end case;
 		end process;
 	
