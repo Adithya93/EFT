@@ -19,11 +19,11 @@ entity hashTable is
 			compareLook, resetAgeing, isHit:		out std_logic;
 			hashVal:								buffer std_logic_vector(4 downto 0);
 			crc_reset:							buffer std_logic;
-			isDone:										out std_logic);
+			isDone:										out std_logic;
 --			bucket_entry1_out, bucket_entry2_out : buffer std_logic_vector(47 downto 0);--);-- for debugging);
 --			bucket_ports1_out, bucket_ports2_out : buffer std_logic_vector(9 downto 0);--);
 --			valid_regfile_out							 : buffer std_logic_vector(63 downto 0));
-			
+			state_num:									out std_logic_vector(2 downto 0));
 	end hashTable;
 		
 architecture hashing of hashTable is 
@@ -170,29 +170,36 @@ architecture hashing of hashTable is
 					else
 						state_next <= A;
 					end if;
+					state_num <= "000";
 				when B =>
 					state_next <= C;
+					state_num <= "001";
 				when C =>
 					if(compareDone = '1') then
 						state_next <= D;
 					else
 						state_next <= C;
 					end if;
+					state_num <= "010";
 				when D =>
 					state_next <= E;
+					state_num <= "011";
 				when E => 
 					state_next <= F;
+					state_num <= "100";
 				when F => 
 					if(compareDone = '1') then
 						state_next <= G;
 					else
 						state_next <= F;
 					end if;
+					state_num <= "101";
 				when G =>
 					state_next <= H;
+					state_num <= "110";
 				when H =>
 					state_next <= A;
-					
+					state_num <= "111";					
 				end case;
 			end process;					
 	
@@ -233,7 +240,7 @@ architecture hashing of hashTable is
 					valid_regfile_reg <= notValid;-- use notValid signal to write into valid_bits register
 				end if;
 			when B =>
-
+				-- prepare CRC 
 				crc_reset <= '0';
 				crc_ena <= '1';
 				crc_in <= destAddIn(47 downto 32);
