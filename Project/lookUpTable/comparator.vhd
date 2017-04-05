@@ -5,69 +5,63 @@ use altera.altera_primitives_components.all;
 
 entity comparator is
 		port(
+			clk_sig, reset_sig:	in std_logic;
 			da: 		in std_logic_vector(47 downto 0);
 			addr1:	in std_logic_vector(47 downto 0);
 			addr2:	in std_logic_vector(47 downto 0);
 			compResult:	out std_logic_vector(1 downto 0);
 			compDone:	out std_logic;
-			compStart: 	in std_logic);
+			compStart: 	in std_logic;
+			state_num:	buffer std_logic_vector(1 downto 0));
 end comparator;
 
 architecture comparator_arch of comparator is
-signal comp1     : std_logic;
-signal comp2     : std_logic;
-signal greater1     : std_logic;
-signal equal1     : std_logic;
-signal less1     : std_logic;
-signal greater2     : std_logic;
-signal equal2     : std_logic;
-signal less2     : std_logic;
---	SIGNAL comp1, comp2, greater1, equal1, less1, greater2, equal2, less2;
+
+type state_type is
+			(A, B, C);
+signal state_reg, state_next: state_type;
+
 begin
-	process(da, addr1)
+
+process(clk_sig, reset_sig)
 	begin
-	if compStart = '1' then
-		comp1 <= '0';
-		greater1 <= '0';
-		equal1 <= '0';
-		less1 <= '0';
-		compResult(0) <= '0';
-		if (da > addr1) then
-			greater1 <= '1';
-		elsif (da = addr1) then
-			equal1 <= '1';
-			compResult(0) <= '1';
-		elsif (da < addr1) then
-			less1 <= '1';
+		if(reset_sig = '1') then state_reg <= A;
+		elsif (clk_sig'event and clk_sig = '1') then 
+			state_reg <= state_next;
 		end if;
-		comp1 <= '1';
-		end if;
-	end process;
-	
-	process(da, addr2)
+end process;
+
+
+process(state_reg, da, addr1, addr2, compStart)
 	begin
-	if compStart = '1' then
-		comp2 <= '0';
-		greater2 <= '0';
-		equal2 <= '0';
-		less2 <= '0';
-		compResult(1) <= '0';
-		if (da > addr2) then
-			greater2 <= '1';
-		elsif (da = addr2) then
-			equal2 <= '1';
-			compResult(1) <= '1';
-		elsif (da < addr2) then
-			less2 <= '1';
-		end if;
-		comp2 <= '1';
-		end if;
-	end process;
-	
-	process(comp1, comp2)
-	begin
-		if (comp1 = '1' and comp2 = '1') then
+	case state_reg is
+		when A =>
+			if (compStart = '1') then
+				state_next <= B;
+			else
+				state_next <= A;
+			end if;
+			compDone <= '0';
+			compResult <= "00";
+			state_num <= "00";
+		when B =>
+			if (da = addr1) then
+				compResult(0) <= '1';
+			else
+				compResult(0) <= '0';
+			end if;
+			if (da = addr2) then
+				compResult(1) <= '1';
+			else
+				compResult(1) <= '0';
+			end if;
+			state_next <= C;
 			compDone <= '1';
-		end if;
-	end process;
+			state_num <= "01";
+		when C => -- just latch compDone and compResult for 1 more cycle
+			state_next <= A;
+			state_num <= "10";
+	end case;
+end process;
+	
 end comparator_arch;
