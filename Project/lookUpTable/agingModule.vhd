@@ -10,7 +10,7 @@ entity agingModule is
     set_reg_age: in std_logic_vector(5 downto 0);
     age_out_now: out std_logic;
     age_out_reg: out std_logic_vector(5 downto 0);
-    glob_timer: out std_logic_vector(34 downto 0)
+    glob_timer: out std_logic_vector(9 downto 0) -- Switched from 34
     );
 end agingModule;
 
@@ -19,7 +19,7 @@ architecture agingmod_arch of agingModule is
   signal read_age : std_logic_vector(5 downto 0);
   signal get_time : std_logic_vector(8 downto 0);
   signal timer_clear : std_logic;
-  signal global_timer : std_logic_vector(34 downto 0);
+  signal global_timer : std_logic_vector(9 downto 0); -- Switched from 34
   signal reg_counter_clr : std_logic;
   signal count_regs : std_logic;
   
@@ -39,7 +39,7 @@ architecture agingmod_arch of agingModule is
   component agingTimer
     PORT(
       clk,clr,count: in std_logic;
-      Q : out std_logic_vector(34 downto 0)
+      Q : out std_logic_vector(9 downto 0) -- Switched from 34
       );
   end component;
 
@@ -71,7 +71,7 @@ begin
 
 
   agingRegisters : agingRegFile port map (
-    DATA_IN => global_timer(34 downto 26),
+    DATA_IN => global_timer(9 downto 1), -- 34 downto 26
     reg_select_write => set_reg_age,
     reg_select_read => read_age,
     clk_sig2 => clk,
@@ -105,9 +105,9 @@ begin
         count_regs <= '0';
         timer_clear <= '0';
         age_out_now <= '0';
-        if (global_timer(24 downto 0)="0000000000000000000000000") then
+        if (global_timer(8 downto 0)="000000000") then -- 24-0
           state_next <= s2;
-        elsif(global_timer(34 downto 0)="1101111110000100011101011000000000") then
+        elsif(global_timer(9 downto 0)="1111111111") then -- 34-0
           state_next <= s0;   
         else
           state_next <= s1;
@@ -120,7 +120,7 @@ begin
         if (read_age = "111111") then
           state_next <= s1;
         else
-          if (get_time = global_timer(34 downto 26)-1)then
+          if (get_time(8 downto 7) = (global_timer(9 downto 8)-2))then --34-26
             state_next <= s3;
           else
             state_next <= s2;
@@ -128,7 +128,7 @@ begin
         end if;
       when s3 => -- age out register
         reg_counter_clr <= '0';
-        count_regs <= '1';
+        count_regs <= '0';
         timer_clear <= '0';
         age_out_now <= '1';
         state_next <= s2;
