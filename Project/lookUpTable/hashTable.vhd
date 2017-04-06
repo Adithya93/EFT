@@ -19,11 +19,12 @@ entity hashTable is
 			compareLook, resetAgeing, isHit:		out std_logic;
 			hashVal:								buffer std_logic_vector(4 downto 0);
 			crc_reset:							buffer std_logic;
-			isDone:										out std_logic;
+			isDone:										out std_logic);
 --			bucket_entry1_out, bucket_entry2_out : buffer std_logic_vector(47 downto 0);--);-- for debugging);
 --			bucket_ports1_out, bucket_ports2_out : buffer std_logic_vector(9 downto 0);--);
 --			valid_regfile_out							 : buffer std_logic_vector(63 downto 0));
-			state_num:									out std_logic_vector(2 downto 0));
+--			h_state_num:									out std_logic_vector(2 downto 0);
+--			lru_out:										buffer std_logic);
 	end hashTable;
 		
 architecture hashing of hashTable is 
@@ -75,6 +76,8 @@ architecture hashing of hashTable is
 	signal state_reg, state_next: state_type;
 	signal crc_in : std_logic_vector(15 downto 0);
 	signal crc_out : std_logic_vector(4 downto 0);
+	
+	signal h_state_num : std_logic_vector(2 downto 0);
 	
 	signal bucket_entry1_in, bucket_entry2_in: std_logic_vector(47 downto 0);
 	signal bucket_entry1_out, bucket_entry2_out: std_logic_vector(47 downto 0);
@@ -156,7 +159,7 @@ architecture hashing of hashTable is
 		process(clk, reset)
 		begin
 			if(reset = '1') then state_reg <= A;
-			elsif (clk'event and clk = '0') then 
+			elsif (clk'event and clk = '1') then 
 				state_reg <= state_next;
 			end if;
 		end process;
@@ -170,36 +173,36 @@ architecture hashing of hashTable is
 					else
 						state_next <= A;
 					end if;
-					state_num <= "000";
+					h_state_num <= "000";
 				when B =>
 					state_next <= C;
-					state_num <= "001";
+					h_state_num <= "001";
 				when C =>
 					if(compareDone = '1') then
 						state_next <= D;
 					else
 						state_next <= C;
 					end if;
-					state_num <= "010";
+					h_state_num <= "010";
 				when D =>
 					state_next <= E;
-					state_num <= "011";
+					h_state_num <= "011";
 				when E => 
 					state_next <= F;
-					state_num <= "100";
+					h_state_num <= "100";
 				when F => 
 					if(compareDone = '1') then
 						state_next <= G;
 					else
 						state_next <= F;
 					end if;
-					state_num <= "101";
+					h_state_num <= "101";
 				when G =>
 					state_next <= H;
-					state_num <= "110";
+					h_state_num <= "110";
 				when H =>
 					state_next <= A;
-					state_num <= "111";					
+					h_state_num <= "111";					
 				end case;
 			end process;					
 	
@@ -267,7 +270,8 @@ architecture hashing of hashTable is
 					-- set destPort to be port saved in table
 					destPort <= bucket_ports2_out;					
 					lru_enable <= '1';
-					lru_in <= '1';
+					--lru_in <= '1';
+					lru_in <= '0';
 					resetAgeing <= '1'; -- tell ageing subsystem to write-enable
 					setRegAge <= hashVal & lru_in;
 					valid_we <= '1';
@@ -279,7 +283,8 @@ architecture hashing of hashTable is
 					-- set destPort to be port saved in table
 					destPort <= bucket_ports1_out;					
 					lru_enable <= '1';
-					lru_in <= '0';
+					--lru_in <= '0';
+					lru_in <= '1';
 					resetAgeing <= '1'; -- tell ageing subsystem to write-enable
 					setRegAge <= hashVal & lru_in;
 					valid_we <= '1';

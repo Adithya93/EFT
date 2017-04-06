@@ -2,16 +2,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity agingTimer is
+entity regCounter is
   port (
     clk, clr, count : in std_logic;
-    Q : out std_logic_vector(34 downto 0)
+    Q : out std_logic_vector(5 downto 0)
     );
-end agingTimer;
+end regCounter;
 
-architecture behavior of agingTimer is
+architecture behavior of regCounter is
 
-  signal Pre_Q : std_logic_vector(34 downto 0);
+  signal Pre_Q : std_logic_vector(5 downto 0);
 
 begin
   process(clk,clr,count)
