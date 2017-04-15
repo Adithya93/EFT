@@ -1023,46 +1023,6 @@ SIGNAL("clk_sig")
 	PARENT = "";
 }
 
-SIGNAL("compDone")
-{
-	VALUE_TYPE = NINE_LEVEL_BIT;
-	SIGNAL_TYPE = SINGLE_BIT;
-	WIDTH = 1;
-	LSB_INDEX = -1;
-	DIRECTION = OUTPUT;
-	PARENT = "";
-}
-
-SIGNAL("compResult")
-{
-	VALUE_TYPE = NINE_LEVEL_BIT;
-	SIGNAL_TYPE = BUS;
-	WIDTH = 2;
-	LSB_INDEX = 0;
-	DIRECTION = OUTPUT;
-	PARENT = "";
-}
-
-SIGNAL("compResult[1]")
-{
-	VALUE_TYPE = NINE_LEVEL_BIT;
-	SIGNAL_TYPE = SINGLE_BIT;
-	WIDTH = 1;
-	LSB_INDEX = -1;
-	DIRECTION = OUTPUT;
-	PARENT = "compResult";
-}
-
-SIGNAL("compResult[0]")
-{
-	VALUE_TYPE = NINE_LEVEL_BIT;
-	SIGNAL_TYPE = SINGLE_BIT;
-	WIDTH = 1;
-	LSB_INDEX = -1;
-	DIRECTION = OUTPUT;
-	PARENT = "compResult";
-}
-
 SIGNAL("compStart")
 {
 	VALUE_TYPE = NINE_LEVEL_BIT;
@@ -1601,6 +1561,46 @@ SIGNAL("state_num[0]")
 	LSB_INDEX = -1;
 	DIRECTION = OUTPUT;
 	PARENT = "state_num";
+}
+
+SIGNAL("compIdent")
+{
+	VALUE_TYPE = NINE_LEVEL_BIT;
+	SIGNAL_TYPE = BUS;
+	WIDTH = 2;
+	LSB_INDEX = 0;
+	DIRECTION = OUTPUT;
+	PARENT = "";
+}
+
+SIGNAL("compIdent[1]")
+{
+	VALUE_TYPE = NINE_LEVEL_BIT;
+	SIGNAL_TYPE = SINGLE_BIT;
+	WIDTH = 1;
+	LSB_INDEX = -1;
+	DIRECTION = OUTPUT;
+	PARENT = "compIdent";
+}
+
+SIGNAL("compIdent[0]")
+{
+	VALUE_TYPE = NINE_LEVEL_BIT;
+	SIGNAL_TYPE = SINGLE_BIT;
+	WIDTH = 1;
+	LSB_INDEX = -1;
+	DIRECTION = OUTPUT;
+	PARENT = "compIdent";
+}
+
+SIGNAL("compFinished")
+{
+	VALUE_TYPE = NINE_LEVEL_BIT;
+	SIGNAL_TYPE = SINGLE_BIT;
+	WIDTH = 1;
+	LSB_INDEX = -1;
+	DIRECTION = OUTPUT;
+	PARENT = "";
 }
 
 TRANSITION_LIST("addr1[47]")
@@ -2491,33 +2491,6 @@ TRANSITION_LIST("clk_sig")
 	}
 }
 
-TRANSITION_LIST("compDone")
-{
-	NODE
-	{
-		REPEAT = 1;
-		LEVEL X FOR 1000.0;
-	}
-}
-
-TRANSITION_LIST("compResult[1]")
-{
-	NODE
-	{
-		REPEAT = 1;
-		LEVEL X FOR 1000.0;
-	}
-}
-
-TRANSITION_LIST("compResult[0]")
-{
-	NODE
-	{
-		REPEAT = 1;
-		LEVEL X FOR 1000.0;
-	}
-}
-
 TRANSITION_LIST("compStart")
 {
 	NODE
@@ -2996,6 +2969,33 @@ TRANSITION_LIST("state_num[1]")
 }
 
 TRANSITION_LIST("state_num[0]")
+{
+	NODE
+	{
+		REPEAT = 1;
+		LEVEL X FOR 1000.0;
+	}
+}
+
+TRANSITION_LIST("compIdent[1]")
+{
+	NODE
+	{
+		REPEAT = 1;
+		LEVEL X FOR 1000.0;
+	}
+}
+
+TRANSITION_LIST("compIdent[0]")
+{
+	NODE
+	{
+		REPEAT = 1;
+		LEVEL X FOR 1000.0;
+	}
+}
+
+TRANSITION_LIST("compFinished")
 {
 	NODE
 	{
@@ -4503,51 +4503,12 @@ DISPLAY_LINE
 
 DISPLAY_LINE
 {
-	CHANNEL = "compDone";
+	CHANNEL = "state_num";
 	EXPAND_STATUS = COLLAPSED;
 	RADIX = Binary;
 	TREE_INDEX = 150;
 	TREE_LEVEL = 0;
-}
-
-DISPLAY_LINE
-{
-	CHANNEL = "compResult";
-	EXPAND_STATUS = COLLAPSED;
-	RADIX = Binary;
-	TREE_INDEX = 151;
-	TREE_LEVEL = 0;
-	CHILDREN = 152, 153;
-}
-
-DISPLAY_LINE
-{
-	CHANNEL = "compResult[1]";
-	EXPAND_STATUS = COLLAPSED;
-	RADIX = Binary;
-	TREE_INDEX = 152;
-	TREE_LEVEL = 1;
-	PARENT = 151;
-}
-
-DISPLAY_LINE
-{
-	CHANNEL = "compResult[0]";
-	EXPAND_STATUS = COLLAPSED;
-	RADIX = Binary;
-	TREE_INDEX = 153;
-	TREE_LEVEL = 1;
-	PARENT = 151;
-}
-
-DISPLAY_LINE
-{
-	CHANNEL = "state_num";
-	EXPAND_STATUS = COLLAPSED;
-	RADIX = Binary;
-	TREE_INDEX = 154;
-	TREE_LEVEL = 0;
-	CHILDREN = 155, 156;
+	CHILDREN = 151, 152;
 }
 
 DISPLAY_LINE
@@ -4555,9 +4516,9 @@ DISPLAY_LINE
 	CHANNEL = "state_num[1]";
 	EXPAND_STATUS = COLLAPSED;
 	RADIX = Binary;
-	TREE_INDEX = 155;
+	TREE_INDEX = 151;
 	TREE_LEVEL = 1;
-	PARENT = 154;
+	PARENT = 150;
 }
 
 DISPLAY_LINE
@@ -4565,9 +4526,48 @@ DISPLAY_LINE
 	CHANNEL = "state_num[0]";
 	EXPAND_STATUS = COLLAPSED;
 	RADIX = Binary;
-	TREE_INDEX = 156;
+	TREE_INDEX = 152;
 	TREE_LEVEL = 1;
-	PARENT = 154;
+	PARENT = 150;
+}
+
+DISPLAY_LINE
+{
+	CHANNEL = "compIdent";
+	EXPAND_STATUS = COLLAPSED;
+	RADIX = Binary;
+	TREE_INDEX = 153;
+	TREE_LEVEL = 0;
+	CHILDREN = 154, 155;
+}
+
+DISPLAY_LINE
+{
+	CHANNEL = "compIdent[1]";
+	EXPAND_STATUS = COLLAPSED;
+	RADIX = Binary;
+	TREE_INDEX = 154;
+	TREE_LEVEL = 1;
+	PARENT = 153;
+}
+
+DISPLAY_LINE
+{
+	CHANNEL = "compIdent[0]";
+	EXPAND_STATUS = COLLAPSED;
+	RADIX = Binary;
+	TREE_INDEX = 155;
+	TREE_LEVEL = 1;
+	PARENT = 153;
+}
+
+DISPLAY_LINE
+{
+	CHANNEL = "compFinished";
+	EXPAND_STATUS = COLLAPSED;
+	RADIX = Binary;
+	TREE_INDEX = 156;
+	TREE_LEVEL = 0;
 }
 
 TIME_BAR

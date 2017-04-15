@@ -39,17 +39,13 @@ architecture imp_tableEntries of LRURegFile is
 	
 	
 	signal decodeHash: std_logic_vector(0 to 31);
-	--type reg_outputs is array (0 to 31) of std_logic_vector(47 downto 0);
-	--signal regOutputs : reg_outputs;
 	
 	type reg_outputs is array (0 to 31) of std_logic;
 	signal regOutputs : reg_outputs;
-	--signal regOutputs: std_logic_vector(31 downto 0);
-	
-	
-	--signal triStateOutputs: reg_outputs;
-	
-	
+		
+	signal not_clrn_sig, not_prn_sig: std_logic;
+	signal ena_sig_vec : std_logic_vector(31 downto 0);
+		
 	begin 
 ---	regDataOut <= triStateOutputs;
 	
@@ -90,22 +86,17 @@ architecture imp_tableEntries of LRURegFile is
 	tableEntriesDecoder: decoder_5to32 port map(DATA_IN => reg_select,
 								DATA_OUT => decodeHash,
 								EN => '1');
-	
+	not_clrn_sig <= not clrn_sig2;
+	not_prn_sig <= not prn_sig2;
 	
 	-- use decoder to convert reg_select into 1-hot encoding
 	
 		GEN_REGS:
 		for I in 0 to 31 generate
 		begin
+			ena_sig_vec(I) <= ena_sig2 and decodeHash(I);
 			REGX: DFFE port map
-			(d => DATA_IN, clk => clk_sig2, clrn => not clrn_sig2, ena => ena_sig2 and decodeHash(I), prn => not prn_sig2, q => regOutputs(I));
+			(d => DATA_IN, clk => clk_sig2, clrn => not_clrn_sig, ena => ena_sig_vec(I), prn => not_prn_sig, q => regOutputs(I));
 		end generate GEN_REGS;
 		
-		
-		
---	tristate : for I in 0 to 31 generate
---	begin
---    triStateOuptuts(I) <= regOutputs(I) when (decodeHash(I) = '1') else (others => 'Z');
---	end generate tristate;
-
 end architecture imp_tableEntries;

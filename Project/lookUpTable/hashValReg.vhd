@@ -3,14 +3,14 @@ use ieee.std_logic_1164.all;
 library altera; 
 use altera.altera_primitives_components.all;
 
-entity tablePortReg is
+entity hashValReg is
 	port(
-			regEntry: 					in std_logic_vector(9 downto 0);
+			regEntry: 					in std_logic_vector(4 downto 0);
 			clk_sig, clr, ena_sig, prn_sig: 	in std_logic;
-			qOut:								out std_logic_vector(9 downto 0));
-end tablePortReg;
+			qOut:								out std_logic_vector(4 downto 0));
+end hashValReg;
 
-architecture genReg of tablePortReg is
+architecture genReg of hashValReg is
 	COMPONENT DFFE
    PORT (d   : IN STD_LOGIC;
 
@@ -25,14 +25,16 @@ architecture genReg of tablePortReg is
         q    : OUT STD_LOGIC );
 	 end component;
 	 
-	  signal not_clrn_sig, not_prn_sig: std_logic;
+	 signal not_clrn_sig, not_prn_sig: std_logic;
 	 
 	 begin
 		not_clrn_sig <= not clr;
-		not_prn_sig <= not prn_sig;	 
+		not_prn_sig <= not prn_sig;
+		
 		GEN_REG:
-		for I in 0 to 9 generate
+		for I in 0 to 4 generate
 			DFFE0: DFFE port map
+			--(d => regEntry(I), clk => clk_sig, clrn => not clr, prn => not prn_sig, ena => ena_sig, q => qOut(I));
 			(d => regEntry(I), clk => clk_sig, clrn => not_clrn_sig, prn => not_prn_sig, ena => ena_sig, q => qOut(I));
 		end generate GEN_REG;
 end genReg;

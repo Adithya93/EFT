@@ -38,7 +38,7 @@ architecture imp_tableEntries of tableEntries is
 	type reg_outputs is array (0 to 31) of std_logic_vector(47 downto 0);
 	signal regOutputs : reg_outputs;
 	--signal triStateOutputs: reg_outputs;
-	
+	signal ena_sig_vec : std_logic_vector(31 downto 0);
 	
 	begin 
 ---	regDataOut <= triStateOutputs;
@@ -83,12 +83,14 @@ architecture imp_tableEntries of tableEntries is
 	
 	
 	-- use decoder to convert reg_select into 1-hot encoding
+
 	
 		GEN_REGS:
 		for I in 0 to 31 generate
 		begin
+			ena_sig_vec(I) <= ena_sig2 and decodeHash(I);
 			REGX: tableEntryReg port map
-			(regEntry => DATA_IN, clk_sig => clk_sig2, clr => clrn_sig2, ena_sig => ena_sig2 and decodeHash(I), prn_sig => prn_sig2, qOut => regOutputs(I));
+			(regEntry => DATA_IN, clk_sig => clk_sig2, clr => clrn_sig2, ena_sig => ena_sig_vec(I), prn_sig => prn_sig2, qOut => regOutputs(I));
 		end generate GEN_REGS;
 		
 		
